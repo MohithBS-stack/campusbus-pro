@@ -1,152 +1,217 @@
-# 🚌 CampusBus Pro
+# 🚌 CampusMove — Live Bus Tracker
 
-> A smart campus mobility platform — real-time bus tracking, attendance management, and alert system for students, drivers, and faculty.
+> Real-time campus bus tracking. Drivers broadcast live GPS. Students follow their bus, set pickup stops, and get arrival alerts — all in a single HTML file.
 
-![HTML](https://img.shields.io/badge/HTML-Single%20File-orange?style=flat-square)
-![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)
-![Status](https://img.shields.io/badge/Status-Active-brightgreen?style=flat-square)
-
----
-
-## 📱 Live Demo
-
-🔗 **[View Live →](https://YOUR_USERNAME.github.io/campusbus-pro/)**
-
-> Replace the link above with your actual GitHub Pages URL after deployment.
+![Made with Firebase](https://img.shields.io/badge/Backend-Firebase-orange?style=flat-square&logo=firebase)
+![Leaflet Maps](https://img.shields.io/badge/Maps-Leaflet.js-green?style=flat-square)
+![Single File](https://img.shields.io/badge/Deploy-Single%20HTML%20File-blue?style=flat-square)
 
 ---
 
 ## ✨ Features
 
-### 🎓 Student View
-- Live bus tracking with AI-powered ETA prediction
-- Real-time route progress visualization
-- Crowd reporting — mark buses as Empty / Medium / Full
-- Personalized stop selection
-- Leave-Now popup alerts
+### 👨‍✈️ Driver
+- Select your assigned bus from a visual grid before starting
+- Broadcast live GPS to all students in real time via Firebase
+- Trip timer, GPS accuracy display, and update counter
+- One-tap Start / Stop trip
 
-### 🚗 Driver View
-- Trip start/end controls
-- QR code boarding scanner (with attendance auto-sync)
-- Crowd status updates
-- Delay and emergency reporting
-- Stop-by-stop route progress with arrival marking
+### 🎓 Student / Faculty
+- Select your bus — only **that bus** appears on your map and sidebar
+- Live bus marker with real-time position updates
+- **Route polyline** drawn on the map showing the full bus path
+- **📍 Pickup stop** — tap anywhere on the map to drop your personal stop pin
+- **ETA calculation** — live distance and estimated arrival time to your stop
+- **Arrival notifications** — in-app alerts when bus is <300m and <50m away
 
-### 👨‍🏫 Faculty View
-- Full fleet overview dashboard
-- On-time rate and delay statistics
-- Access to full attendance reports
-- Broadcast alerts to students
+### 🔧 Admin Panel *(separate login)*
+- Separate admin login at the bottom of the main login page
+- Live dashboard: active buses, total registered buses, all driver statuses
+- Real-time bus table with driver email, coordinates, and last update time
+- Full bus registry table
 
-### 📋 Attendance System
-- Full student roster per bus (B01–B04)
-- Real-time boarding status: Boarded / Waiting / Absent
-- Search by name or roll number
-- Filter by stop or status
-- Stop-wise boarding chart
-- Tap to cycle student status with auto-timestamp
-- Mark All Boarded with confirmation
-- Export attendance records
-
-### 🚨 Alert Center
-- Live alert dashboard with severity stats
-- Alert types: Critical, Warning, Info, Success
-- Snooze, Dismiss, and Action buttons per alert
-- Broadcast tool for drivers and faculty
-- Emergency alert with confirmation modal
-- Auto-alerts on delay reports, arrivals, and trip events
-- Color-coded toast notifications
+### 🔐 Auth
+- Email / password sign-in and sign-up via Firebase Authentication
+- Role-based routing: Driver → bus selection → driver dashboard; Student → bus selection → live map
+- Admin role stored in Firebase DB — no code changes needed to promote users
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Deployment (Required — Firebase won't work from a local file)
 
-This is a **zero-dependency, single-file** web app. No npm, no build step, no server required.
-
-### Run Locally
-
-Just open the file in any browser:
-
+### Option 1 — GitHub Pages *(recommended)*
 ```bash
-# Clone the repo
-git clone https://github.com/YOUR_USERNAME/campusbus-pro.git
-
-# Open in browser
-open index.html        # macOS
-start index.html       # Windows
-xdg-open index.html    # Linux
+# 1. Create a new repo on github.com
+# 2. Rename campusmove.html → index.html
+# 3. Push to main branch
+git init
+git add index.html
+git commit -m "first commit"
+git remote add origin https://github.com/YOUR_USERNAME/campusmove.git
+git push -u origin main
+# 4. Go to Settings → Pages → Source: main → Save
+# Live at: https://YOUR_USERNAME.github.io/campusmove
 ```
 
-### Deploy on GitHub Pages
+### Option 2 — Netlify Drop *(fastest, 30 seconds)*
+1. Rename `campusmove.html` → `index.html`
+2. Go to [app.netlify.com/drop](https://app.netlify.com/drop)
+3. Drag and drop the file — you get a live `https://` URL instantly
 
-1. Push `index.html` to your repository
-2. Go to **Settings → Pages**
-3. Set source to `main` branch, `/ (root)` folder
-4. Your app will be live at `https://YOUR_USERNAME.github.io/campusbus-pro/`
+### Option 3 — Firebase Hosting
+```bash
+npm install -g firebase-tools
+firebase login
+firebase init hosting   # set public dir to "." and index to index.html
+firebase deploy
+```
+
+> **After deploying:** Go to Firebase Console → Authentication → Settings → **Authorized domains** → add your live URL.
 
 ---
 
-## 🗂️ Project Structure
+## ⚙️ Setup
+
+### 1. Firebase Project
+1. Go to [firebase.google.com](https://firebase.google.com) → Create project
+2. Enable **Authentication** → Sign-in method → **Email/Password**
+3. Enable **Realtime Database** → Start in test mode
+
+### 2. Add Your Firebase Config
+Open `index.html` and replace the config block:
+```js
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+```
+
+### 3. Firebase Database Rules
+Go to Firebase Console → Realtime Database → Rules and paste:
+```json
+{
+  "rules": {
+    "buses": {
+      ".read": "auth != null",
+      "$uid": {
+        ".write": "auth != null && auth.uid === $uid"
+      }
+    },
+    "users": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid"
+      }
+    }
+  }
+}
+```
+
+### 4. Set Up an Admin Account
+1. Sign up normally through the app as any role
+2. In Firebase Console → Realtime Database → find `users/{uid}`
+3. Change the `role` field from `"driver"` or `"student"` to `"admin"`
+4. That account can now log in via the **Admin Panel** link on the login page
+
+### 5. Set Your Campus Bus Routes
+In `index.html`, find `BUS_LIST` and replace the `routeCoords` arrays with real GPS waypoints for your campus:
+```js
+const BUS_LIST = [
+  {
+    id: "BUS-01",
+    label: "Bus 01",
+    routeCoords: [
+      [12.9716, 77.5946],   // Main Gate
+      [12.9730, 77.5960],   // Block A
+      [12.9750, 77.5980],   // Library
+      [12.9770, 77.5990],   // Hostel
+    ]
+  },
+  // ... add more buses
+];
+```
+> **Tip:** Use [Google Maps](https://maps.google.com) → right-click any point → copy coordinates. Add as many waypoints as you want for accurate route lines.
+
+---
+
+## 📖 How to Use
+
+### Driver
+1. Open the app → select **Driver** tab → sign in
+2. Pick your assigned bus from the grid
+3. Tap **▶️ Start Trip** — your GPS is now live
+4. Tap **⏹ Stop Trip** when done
+
+### Student / Faculty
+1. Open the app → select **Student / Faculty** → sign in
+2. Pick your bus from the grid — only your bus will appear on the map
+3. Your bus's route is drawn on the map as a dashed line
+4. Tap **📍 Set Stop** in the sidebar → tap your pickup point on the map
+5. ETA updates live as the bus moves toward your stop
+6. You'll get an in-app alert when the bus is **300m** and **50m** away
+
+### Admin
+1. On the login page, tap **🔧 Admin Panel →** at the bottom
+2. Sign in with your admin account
+3. View live bus statuses, driver emails, coordinates, and last update times
+
+---
+
+## 🛠️ Tech Stack
+
+| Technology | Purpose |
+|---|---|
+| HTML / CSS / JS | Single-file frontend, no build tools |
+| [Firebase Auth](https://firebase.google.com/products/auth) | Email/password authentication |
+| [Firebase Realtime Database](https://firebase.google.com/products/realtime-database) | Live GPS sync across all clients |
+| [Leaflet.js](https://leafletjs.com/) v1.9.4 | Interactive map |
+| [OpenStreetMap](https://www.openstreetmap.org/) | Free map tiles |
+| [Google Fonts](https://fonts.google.com/) | Syne + DM Sans typography |
+| Haversine Formula | Distance calculation for ETA |
+
+---
+
+## 📁 Project Structure
 
 ```
-campusbus-pro/
-├── index.html       # Entire app — HTML + CSS + JS in one file
-├── README.md        # Project documentation
-└── LICENSE          # MIT License
+campusmove/
+├── index.html      ← Entire app (all screens in one file)
+├── README.md       ← This file
+└── LICENSE         ← MIT License
 ```
 
 ---
 
-## 🛣️ Roadmap
+## 🗺️ App Flow
 
-- [ ] Backend integration (Node.js / Firebase)
-- [ ] Real GPS tracking via browser Geolocation API
-- [ ] Push notifications (Web Push API)
-- [ ] Parent portal view
-- [ ] Monthly attendance reports with CSV export
-- [ ] PWA support (installable on phone)
-- [ ] Multi-campus support
+```
+Login Page
+├── Driver tab   → [Bus Selection Grid] → Driver Dashboard (GPS broadcast)
+├── Student tab  → [Bus Selection Grid] → Live Map (track bus + ETA + alerts)
+└── Admin Panel link → Admin Login → Admin Dashboard (live overview)
+```
 
 ---
 
-## 🧰 Tech Stack
+## 🔒 Security Notes
 
-| Layer | Technology |
-|-------|-----------|
-| Markup | HTML5 |
-| Styling | CSS3 (custom properties, animations) |
-| Logic | Vanilla JavaScript (ES6+) |
-| Fonts | Google Fonts — Outfit + JetBrains Mono |
-| Map | HTML5 Canvas API |
-| Hosting | GitHub Pages |
+- Firebase web API keys are safe to expose **only if** your Database Rules are properly locked down (see setup above)
+- Admin access is enforced server-side by checking `role === "admin"` in the Firebase DB — signing in with a non-admin account will be rejected even with correct credentials
+- For production, enable [Firebase App Check](https://firebase.google.com/products/app-check) to prevent abuse
 
 ---
 
 ## 🤝 Contributing
 
-Contributions are welcome! Here's how:
-
-1. Fork the repository
-2. Create a feature branch — `git checkout -b feature/your-feature`
-3. Commit your changes — `git commit -m "Add your feature"`
-4. Push to the branch — `git push origin feature/your-feature`
-5. Open a Pull Request
-
-Please make sure your code follows the existing style and is well-commented.
+Pull requests are welcome. For major changes, open an issue first.
 
 ---
 
 ## 📄 License
 
-This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
-
----
-
-## 👤 Author
-
-**Your Name**
-- GitHub: [@YOUR_USERNAME](https://github.com/YOUR_USERNAME)
-
----
-
-> Made with ❤️ for smarter campus mobility.
+[MIT](LICENSE) © 2026 CampusMove
